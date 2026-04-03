@@ -6,7 +6,7 @@ RUN npm install
 COPY . .
 RUN chmod +x ./scripts/dev-entrypoint.sh ./scripts/prod-entrypoint.sh
 EXPOSE 3000
-CMD ["./scripts/dev-entrypoint.sh"]
+CMD ["sh", "./scripts/dev-entrypoint.sh"]
 
 FROM docker.io/library/node:24-bookworm AS build
 
@@ -30,4 +30,4 @@ COPY scripts ./scripts
 RUN chmod +x ./scripts/prod-entrypoint.sh
 COPY --from=build /app/dist ./dist
 EXPOSE 3000
-CMD ["./scripts/prod-entrypoint.sh"]
+CMD ["sh", "./scripts/prod-entrypoint.sh"]

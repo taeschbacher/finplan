@@ -2,22 +2,13 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { Booking, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
-
-interface BookingResponse {
-  id: string;
-  bookingDate: string;
-  income: number | null;
-  expense: number | null;
-  cashBalance: number;
-  text: string;
-  createdAt: string;
-}
+import { BookingResponseDto } from './dto/booking-response.dto';
 
 @Injectable()
 export class BookingsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(): Promise<BookingResponse[]> {
+  async findAll(): Promise<BookingResponseDto[]> {
     const bookings = await this.prisma.booking.findMany({
       orderBy: [{ bookingDate: 'asc' }, { createdAt: 'asc' }],
     });
@@ -25,7 +16,7 @@ export class BookingsService {
     return this.mapWithRunningBalance(bookings);
   }
 
-  async create(createBookingDto: CreateBookingDto): Promise<BookingResponse> {
+  async create(createBookingDto: CreateBookingDto): Promise<BookingResponseDto> {
     this.validateCreateBookingDto(createBookingDto);
 
     const created = await this.prisma.booking.create({
@@ -61,7 +52,7 @@ export class BookingsService {
     }
   }
 
-  private async findOneWithComputedBalance(id: string): Promise<BookingResponse> {
+  private async findOneWithComputedBalance(id: string): Promise<BookingResponseDto> {
     const bookings = await this.prisma.booking.findMany({
       orderBy: [{ bookingDate: 'asc' }, { createdAt: 'asc' }],
     });
@@ -76,7 +67,7 @@ export class BookingsService {
     return booking;
   }
 
-  private mapWithRunningBalance(bookings: Booking[]): BookingResponse[] {
+  private mapWithRunningBalance(bookings: Booking[]): BookingResponseDto[] {
     let runningBalance = new Prisma.Decimal(0);
 
     return bookings.map((booking) => {
@@ -88,7 +79,7 @@ export class BookingsService {
     });
   }
 
-  private toResponse(booking: Booking, cashBalance: Prisma.Decimal): BookingResponse {
+  private toResponse(booking: Booking, cashBalance: Prisma.Decimal): BookingResponseDto {
     return {
       id: booking.id,
       bookingDate: formatDateOnly(booking.bookingDate),

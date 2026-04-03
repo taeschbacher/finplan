@@ -6,7 +6,7 @@ RUN npm install
 COPY . .
 RUN chmod +x ./scripts/dev-entrypoint.sh
 EXPOSE 4200
-CMD ["./scripts/dev-entrypoint.sh"]
+CMD ["sh", "./scripts/dev-entrypoint.sh"]
 
 FROM docker.io/library/node:24-bookworm AS build
 
