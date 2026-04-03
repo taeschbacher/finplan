@@ -16,7 +16,7 @@
         <p>Create an income or expense entry. Date, amount, and text are required.</p>
       </div>
       <app-booking-form
-        [saving]="saving"
+        [saving]="saving()"
         (bookingCreated)="onCreateBooking($event)"
       ></app-booking-form>
     </section>
@@ -27,12 +27,12 @@
         <p>The running cash balance is calculated automatically in chronological order.</p>
       </div>
 
-      <p *ngIf="successMessage" class="message message-success">{{ successMessage }}</p>
-      <p *ngIf="errorMessage" class="message message-error">{{ errorMessage }}</p>
+      <p *ngIf="successMessage()" class="message message-success">{{ successMessage() }}</p>
+      <p *ngIf="errorMessage()" class="message message-error">{{ errorMessage() }}</p>
 
       <app-bookings-table
-        [bookings]="bookings"
-        [loading]="loading"
+        [bookings]="bookings()"
+        [loading]="loading()"
       ></app-bookings-table>
     </section>
   </main>

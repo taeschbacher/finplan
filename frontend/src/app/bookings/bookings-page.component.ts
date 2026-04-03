@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core';
+import { Component, DestroyRef, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import { Booking, CreateBookingRequest } from './booking.model';
@@ -21,64 +21,62 @@ export class BookingsPageComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly bookingsService = inject(BookingsService);
 
-  bookings: Booking[] = [];
-  loading = true;
-  saving = false;
-  errorMessage = '';
-  successMessage = '';
+  readonly bookings = signal<Booking[]>([]);
+  readonly loading = signal(true);
+  readonly saving = signal(false);
+  readonly errorMessage = signal('');
+  readonly successMessage = signal('');
 
   ngOnInit(): void {
     this.loadBookings();
   }
 
   onCreateBooking(payload: CreateBookingRequest): void {
-    this.saving = true;
-    this.errorMessage = '';
-    this.successMessage = '';
+    this.saving.set(true);
+    this.errorMessage.set('');
+    this.successMessage.set('');
 
     this.bookingsService
       .createBooking(payload)
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         finalize(() => {
-          this.saving = false;
+          this.saving.set(false);
         }),
       )
       .subscribe({
         next: () => {
-          this.successMessage = 'Booking saved successfully.';
+          this.successMessage.set('Booking saved successfully.');
           this.bookingForm?.reset();
           this.loadBookings();
         },
         error: (error: HttpErrorResponse) => {
-          this.errorMessage = this.extractErrorMessage(
-            error,
-            'Unable to save booking.',
+          this.errorMessage.set(
+            this.extractErrorMessage(error, 'Unable to save booking.'),
           );
         },
       });
   }
 
   private loadBookings(): void {
-    this.loading = true;
-    this.errorMessage = '';
+    this.loading.set(true);
+    this.errorMessage.set('');
 
     this.bookingsService
       .getBookings()
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         finalize(() => {
-          this.loading = false;
+          this.loading.set(false);
         }),
       )
       .subscribe({
         next: (bookings) => {
-          this.bookings = bookings;
+          this.bookings.set(bookings);
         },
         error: (error: HttpErrorResponse) => {
-          this.errorMessage = this.extractErrorMessage(
-            error,
-            'Unable to load bookings.',
+          this.errorMessage.set(
+            this.extractErrorMessage(error, 'Unable to load bookings.'),
           );
         },
       });
