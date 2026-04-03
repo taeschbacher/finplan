@@ -1,0 +1,43 @@
+services:
+  db:
+    image: docker.io/library/postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-finplan}
+      POSTGRES_USER: ${POSTGRES_USER:-finplan}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-finplan}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      target: prod
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      FRONTEND_ORIGIN: http://localhost:8080
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-finplan}:${POSTGRES_PASSWORD:-finplan}@db:5432/${POSTGRES_DB:-finplan}?schema=public"
+    ports:
+      - "3000:3000"
+
+  frontend:
+    build:
+      context: ./frontend
+      target: prod
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+
+volumes:
+  postgres_data:

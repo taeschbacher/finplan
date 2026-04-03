@@ -1,0 +1,30 @@
+<div class="table-wrapper" *ngIf="!loading; else loadingState">
+  <table *ngIf="bookings.length > 0; else emptyState">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th class="numeric">Income</th>
+        <th class="numeric">Expense</th>
+        <th class="numeric">Cash Balance</th>
+        <th>Text</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let booking of bookings; trackBy: trackByBookingId">
+        <td>{{ booking.bookingDate }}</td>
+        <td class="numeric">{{ booking.income !== null ? (booking.income | number:'1.2-2') : '—' }}</td>
+        <td class="numeric">{{ booking.expense !== null ? (booking.expense | number:'1.2-2') : '—' }}</td>
+        <td class="numeric">{{ booking.cashBalance | number:'1.2-2' }}</td>
+        <td>{{ booking.text }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<ng-template #loadingState>
+  <div class="state-box">Loading bookings...</div>
+</ng-template>
+
+<ng-template #emptyState>
+  <div class="state-box">No bookings yet. Add your first booking using the form.</div>
+</ng-template>

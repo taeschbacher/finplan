@@ -1,0 +1,46 @@
+<form [formGroup]="form" class="booking-form" (ngSubmit)="submit()">
+  <label class="field">
+    <span>Date</span>
+    <input type="date" formControlName="bookingDate" />
+    <small *ngIf="form.controls.bookingDate.touched && form.controls.bookingDate.invalid">
+      Please enter a booking date.
+    </small>
+  </label>
+
+  <fieldset class="field type-fieldset">
+    <legend>Booking type</legend>
+    <label class="type-option">
+      <input type="radio" formControlName="type" value="income" />
+      <span>Income</span>
+    </label>
+    <label class="type-option">
+      <input type="radio" formControlName="type" value="expense" />
+      <span>Expense</span>
+    </label>
+  </fieldset>
+
+  <label class="field">
+    <span>Amount</span>
+    <input type="number" formControlName="amount" min="0.01" step="0.01" placeholder="0.00" />
+    <small *ngIf="form.controls.amount.touched && form.controls.amount.invalid">
+      Enter an amount greater than 0.
+    </small>
+  </label>
+
+  <label class="field">
+    <span>Text</span>
+    <textarea
+      formControlName="text"
+      rows="4"
+      maxlength="255"
+      placeholder="What does this booking refer to?"
+    ></textarea>
+    <small *ngIf="form.controls.text.touched && form.controls.text.invalid">
+      Please enter a short description.
+    </small>
+  </label>
+
+  <button type="submit" [disabled]="saving">
+    {{ saving ? 'Saving...' : 'Add booking' }}
+  </button>
+</form>

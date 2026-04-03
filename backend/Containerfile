@@ -1,0 +1,33 @@
+FROM docker.io/library/node:24-bookworm AS dev
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN chmod +x ./scripts/dev-entrypoint.sh ./scripts/prod-entrypoint.sh
+EXPOSE 3000
+CMD ["./scripts/dev-entrypoint.sh"]
+
+FROM docker.io/library/node:24-bookworm AS build
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN chmod +x ./scripts/dev-entrypoint.sh ./scripts/prod-entrypoint.sh
+RUN npx prisma generate
+RUN npm run build
+
+FROM docker.io/library/node:24-bookworm AS prod
+
+WORKDIR /app
+ENV NODE_ENV=production
+COPY package*.json ./
+RUN npm install --omit=dev
+COPY prisma ./prisma
+RUN npx prisma generate
+COPY scripts ./scripts
+RUN chmod +x ./scripts/prod-entrypoint.sh
+COPY --from=build /app/dist ./dist
+EXPOSE 3000
+CMD ["./scripts/prod-entrypoint.sh"]
