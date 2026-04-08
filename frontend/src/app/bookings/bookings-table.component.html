@@ -15,7 +15,19 @@
         <td class="numeric">{{ booking.income !== null ? (booking.income | number:'1.2-2') : '—' }}</td>
         <td class="numeric">{{ booking.expense !== null ? (booking.expense | number:'1.2-2') : '—' }}</td>
         <td class="numeric">{{ booking.cashBalance | number:'1.2-2' }}</td>
-        <td>{{ booking.text }}</td>
+        <td class="text-cell">
+          <div class="text-cell-content">
+            <span class="booking-text">{{ booking.text }}</span>
+            <button
+              type="button"
+              class="delete-button"
+              [disabled]="deletingBookingId !== null"
+              (click)="requestDelete(booking)"
+            >
+              {{ deletingBookingId === booking.id ? 'Deleting...' : 'Delete' }}
+            </button>
+          </div>
+        </td>
       </tr>
     </tbody>
   </table>

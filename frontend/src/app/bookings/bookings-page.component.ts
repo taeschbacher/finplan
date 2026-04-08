@@ -24,6 +24,7 @@ export class BookingsPageComponent implements OnInit {
   readonly bookings = signal<Booking[]>([]);
   readonly loading = signal(true);
   readonly saving = signal(false);
+  readonly deletingBookingId = signal<string | null>(null);
   readonly errorMessage = signal('');
   readonly successMessage = signal('');
 
@@ -48,7 +49,7 @@ export class BookingsPageComponent implements OnInit {
         next: () => {
           this.successMessage.set('Booking saved successfully.');
           this.bookingForm?.reset();
-          this.loadBookings();
+          this.loadBookings({ showLoadingIndicator: false });
         },
         error: (error: HttpErrorResponse) => {
           this.errorMessage.set(
@@ -58,8 +59,51 @@ export class BookingsPageComponent implements OnInit {
       });
   }
 
-  private loadBookings(): void {
-    this.loading.set(true);
+  onDeleteBooking(booking: Booking): void {
+    if (this.deletingBookingId() !== null) {
+      return;
+    }
+
+    const confirmed = globalThis.confirm(
+      `Delete the booking "${booking.text}" from ${booking.bookingDate}?`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.deletingBookingId.set(booking.id);
+    this.errorMessage.set('');
+    this.successMessage.set('');
+
+    this.bookingsService
+      .deleteBooking(booking.id)
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => {
+          this.deletingBookingId.set(null);
+        }),
+      )
+      .subscribe({
+        next: () => {
+          this.successMessage.set('Booking deleted successfully.');
+          this.loadBookings({ showLoadingIndicator: false });
+        },
+        error: (error: HttpErrorResponse) => {
+          this.errorMessage.set(
+            this.extractErrorMessage(error, 'Unable to delete booking.'),
+          );
+        },
+      });
+  }
+
+  private loadBookings(options: { showLoadingIndicator?: boolean } = {}): void {
+    const showLoadingIndicator = options.showLoadingIndicator ?? true;
+
+    if (showLoadingIndicator) {
+      this.loading.set(true);
+    }
+
     this.errorMessage.set('');
 
     this.bookingsService
@@ -67,7 +111,9 @@ export class BookingsPageComponent implements OnInit {
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         finalize(() => {
-          this.loading.set(false);
+          if (showLoadingIndicator) {
+            this.loading.set(false);
+          }
         }),
       )
       .subscribe({

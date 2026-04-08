@@ -33,6 +33,8 @@
       <app-bookings-table
         [bookings]="bookings()"
         [loading]="loading()"
+        [deletingBookingId]="deletingBookingId()"
+        (deleteBookingRequested)="onDeleteBooking($event)"
       ></app-bookings-table>
     </section>
   </main>

@@ -15,4 +15,8 @@ export class BookingsService {
   createBooking(payload: CreateBookingRequest): Observable<Booking> {
     return this.http.post<Booking>(this.baseUrl, payload);
   }
+
+  deleteBooking(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
 }

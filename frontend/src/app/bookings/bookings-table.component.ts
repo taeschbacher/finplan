@@ -1,5 +1,5 @@
 import { CommonModule, DecimalPipe } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { Booking } from './booking.model';
 
 @Component({
@@ -12,8 +12,18 @@ import { Booking } from './booking.model';
 export class BookingsTableComponent {
   @Input({ required: true }) bookings: Booking[] = [];
   @Input() loading = false;
+  @Input() deletingBookingId: string | null = null;
+  @Output() deleteBookingRequested = new EventEmitter<Booking>();
 
   trackByBookingId(_index: number, booking: Booking): string {
     return booking.id;
+  }
+
+  requestDelete(booking: Booking): void {
+    if (this.deletingBookingId !== null) {
+      return;
+    }
+
+    this.deleteBookingRequested.emit(booking);
   }
 }
