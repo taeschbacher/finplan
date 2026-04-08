@@ -1,3 +1,5 @@
+export type BookingType = 'income' | 'expense';
+
 export interface Booking {
   id: string;
   bookingDate: string;
@@ -8,9 +10,12 @@ export interface Booking {
   createdAt: string;
 }
 
-export interface CreateBookingRequest {
+export interface BookingRequest {
   bookingDate: string;
   income?: number;
   expense?: number;
   text: string;
 }
+
+export type CreateBookingRequest = BookingRequest;
+export type UpdateBookingRequest = Partial<BookingRequest>;

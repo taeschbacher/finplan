@@ -13,14 +13,25 @@ export class BookingsTableComponent {
   @Input({ required: true }) bookings: Booking[] = [];
   @Input() loading = false;
   @Input() deletingBookingId: string | null = null;
+  @Input() editingBookingId: string | null = null;
+  @Input() actionsDisabled = false;
+  @Output() editBookingRequested = new EventEmitter<Booking>();
   @Output() deleteBookingRequested = new EventEmitter<Booking>();
 
   trackByBookingId(_index: number, booking: Booking): string {
     return booking.id;
   }
 
+  requestEdit(booking: Booking): void {
+    if (this.actionsDisabled || this.editingBookingId === booking.id) {
+      return;
+    }
+
+    this.editBookingRequested.emit(booking);
+  }
+
   requestDelete(booking: Booking): void {
-    if (this.deletingBookingId !== null) {
+    if (this.actionsDisabled) {
       return;
     }
 

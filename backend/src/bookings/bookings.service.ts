@@ -3,6 +3,21 @@ import { Booking, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { BookingResponseDto } from './dto/booking-response.dto';
+import { UpdateBookingDto } from './dto/update-booking.dto';
+
+type MutableBookingInput = {
+  bookingDate: string;
+  income?: number;
+  expense?: number;
+  text: string;
+};
+
+type PersistedBookingInput = {
+  bookingDate: Date;
+  income: Prisma.Decimal | null;
+  expense: Prisma.Decimal | null;
+  text: string;
+};
 
 @Injectable()
 export class BookingsService {
@@ -17,22 +32,33 @@ export class BookingsService {
   }
 
   async create(createBookingDto: CreateBookingDto): Promise<BookingResponseDto> {
-    this.validateCreateBookingDto(createBookingDto);
-
     const created = await this.prisma.booking.create({
-      data: {
-        bookingDate: parseDateOnly(createBookingDto.bookingDate),
-        income: isProvided(createBookingDto.income)
-          ? new Prisma.Decimal(createBookingDto.income)
-          : null,
-        expense: isProvided(createBookingDto.expense)
-          ? new Prisma.Decimal(createBookingDto.expense)
-          : null,
-        text: createBookingDto.text.trim(),
-      },
+      data: this.normalizeBookingInput(createBookingDto),
     });
 
     return this.findOneWithComputedBalance(created.id);
+  }
+
+  async update(
+    id: string,
+    updateBookingDto: UpdateBookingDto,
+  ): Promise<BookingResponseDto> {
+    const existing = await this.prisma.booking.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new NotFoundException(`Booking ${id} was not found`);
+    }
+
+    await this.prisma.booking.update({
+      where: { id },
+      data: this.normalizeBookingInput(
+        this.mergeBookingInput(existing, updateBookingDto),
+      ),
+    });
+
+    return this.findOneWithComputedBalance(id);
   }
 
   async remove(id: string): Promise<void> {
@@ -67,6 +93,54 @@ export class BookingsService {
     return booking;
   }
 
+  private normalizeBookingInput(input: MutableBookingInput): PersistedBookingInput {
+    this.validateBookingInput(input);
+
+    return {
+      bookingDate: parseDateOnly(input.bookingDate),
+      income: isProvided(input.income)
+        ? new Prisma.Decimal(input.income)
+        : null,
+      expense: isProvided(input.expense)
+        ? new Prisma.Decimal(input.expense)
+        : null,
+      text: input.text.trim(),
+    };
+  }
+
+  private mergeBookingInput(
+    existing: Booking,
+    updateBookingDto: UpdateBookingDto,
+  ): MutableBookingInput {
+    const bookingDate = hasOwn(updateBookingDto, 'bookingDate')
+      ? (updateBookingDto.bookingDate ?? formatDateOnly(existing.bookingDate))
+      : formatDateOnly(existing.bookingDate);
+
+    const text = hasOwn(updateBookingDto, 'text')
+      ? (updateBookingDto.text ?? existing.text)
+      : existing.text;
+
+    if (hasOwn(updateBookingDto, 'income') || hasOwn(updateBookingDto, 'expense')) {
+      return {
+        bookingDate,
+        text,
+        ...(isProvided(updateBookingDto.income)
+          ? { income: updateBookingDto.income }
+          : {}),
+        ...(isProvided(updateBookingDto.expense)
+          ? { expense: updateBookingDto.expense }
+          : {}),
+      };
+    }
+
+    return {
+      bookingDate,
+      text,
+      ...(existing.income ? { income: existing.income.toNumber() } : {}),
+      ...(existing.expense ? { expense: existing.expense.toNumber() } : {}),
+    };
+  }
+
   private mapWithRunningBalance(bookings: Booking[]): BookingResponseDto[] {
     let runningBalance = new Prisma.Decimal(0);
 
@@ -91,9 +165,9 @@ export class BookingsService {
     };
   }
 
-  private validateCreateBookingDto(createBookingDto: CreateBookingDto): void {
-    const hasIncome = isProvided(createBookingDto.income);
-    const hasExpense = isProvided(createBookingDto.expense);
+  private validateBookingInput(input: MutableBookingInput): void {
+    const hasIncome = isProvided(input.income);
+    const hasExpense = isProvided(input.expense);
 
     if (hasIncome === hasExpense) {
       throw new BadRequestException(
@@ -101,15 +175,19 @@ export class BookingsService {
       );
     }
 
-    if (!createBookingDto.text.trim()) {
+    if (!input.text.trim()) {
       throw new BadRequestException('text must not be empty');
     }
 
-    parseDateOnly(createBookingDto.bookingDate);
+    parseDateOnly(input.bookingDate);
   }
 }
 
-function isProvided(value: number | undefined): value is number {
+function hasOwn(value: object, key: PropertyKey): boolean {
+  return Object.prototype.hasOwnProperty.call(value, key);
+}
+
+function isProvided(value: number | null | undefined): value is number {
   return typeof value === 'number' && !Number.isNaN(value);
 }
 

@@ -38,10 +38,8 @@ tbody tr:last-child td {
 }
 
 .text-cell-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  display: grid;
+  gap: 0.75rem;
 }
 
 .booking-text {
@@ -49,30 +47,53 @@ tbody tr:last-child td {
   word-break: break-word;
 }
 
-.delete-button {
-  flex-shrink: 0;
-  border: 1px solid #f4b4b0;
-  background: #fff5f4;
-  color: #b42318;
+.action-group {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.action-button {
   border-radius: 999px;
   padding: 0.45rem 0.85rem;
   font-size: 0.9rem;
   font-weight: 700;
   line-height: 1;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.action-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.action-button:disabled {
+  opacity: 0.7;
+  cursor: wait;
+  transform: none;
+}
+
+.edit-button {
+  border: 1px solid #bfd0ff;
+  background: #eef4ff;
+  color: #2949aa;
+}
+
+.edit-button:hover:not(:disabled) {
+  background: #dce8ff;
+  border-color: #9db4ff;
+}
+
+.delete-button {
+  border: 1px solid #f4b4b0;
+  background: #fff5f4;
+  color: #b42318;
 }
 
 .delete-button:hover:not(:disabled) {
   background: #fee4e2;
   border-color: #f48f86;
-  transform: translateY(-1px);
-}
-
-.delete-button:disabled {
-  opacity: 0.7;
-  cursor: wait;
-  transform: none;
 }
 
 .state-box {
@@ -81,11 +102,4 @@ tbody tr:last-child td {
   padding: 1.25rem;
   color: #5e6b85;
   background: #fbfcfe;
-}
-
-@media (max-width: 760px) {
-  .text-cell-content {
-    flex-direction: column;
-    align-items: flex-start;
-  }
 }

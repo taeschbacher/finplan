@@ -1,6 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, OnInit, ViewChild, inject, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  OnInit,
+  ViewChild,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import { Booking, CreateBookingRequest } from './booking.model';
@@ -25,6 +33,11 @@ export class BookingsPageComponent implements OnInit {
   readonly loading = signal(true);
   readonly saving = signal(false);
   readonly deletingBookingId = signal<string | null>(null);
+  readonly editingBooking = signal<Booking | null>(null);
+  readonly editingBookingId = computed(() => this.editingBooking()?.id ?? null);
+  readonly actionsDisabled = computed(
+    () => this.saving() || this.deletingBookingId() !== null,
+  );
   readonly errorMessage = signal('');
   readonly successMessage = signal('');
 
@@ -32,10 +45,75 @@ export class BookingsPageComponent implements OnInit {
     this.loadBookings();
   }
 
-  onCreateBooking(payload: CreateBookingRequest): void {
+  onBookingSubmitted(payload: CreateBookingRequest): void {
+    const editingBooking = this.editingBooking();
+
+    if (editingBooking) {
+      this.updateBooking(editingBooking.id, payload);
+      return;
+    }
+
+    this.createBooking(payload);
+  }
+
+  onStartEditing(booking: Booking): void {
+    if (this.actionsDisabled()) {
+      return;
+    }
+
+    this.editingBooking.set(booking);
+    this.clearMessages();
+  }
+
+  onCancelEditing(): void {
+    this.editingBooking.set(null);
+    this.clearMessages();
+  }
+
+  onDeleteBooking(booking: Booking): void {
+    if (this.actionsDisabled()) {
+      return;
+    }
+
+    const confirmed = globalThis.confirm(
+      `Delete the booking "${booking.text}" from ${booking.bookingDate}?`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.deletingBookingId.set(booking.id);
+    this.clearMessages();
+
+    this.bookingsService
+      .deleteBooking(booking.id)
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => {
+          this.deletingBookingId.set(null);
+        }),
+      )
+      .subscribe({
+        next: () => {
+          if (this.editingBooking()?.id === booking.id) {
+            this.editingBooking.set(null);
+          }
+
+          this.successMessage.set('Booking deleted successfully.');
+          this.loadBookings({ showLoadingIndicator: false });
+        },
+        error: (error: HttpErrorResponse) => {
+          this.errorMessage.set(
+            this.extractErrorMessage(error, 'Unable to delete booking.'),
+          );
+        },
+      });
+  }
+
+  private createBooking(payload: CreateBookingRequest): void {
     this.saving.set(true);
-    this.errorMessage.set('');
-    this.successMessage.set('');
+    this.clearMessages();
 
     this.bookingsService
       .createBooking(payload)
@@ -59,39 +137,27 @@ export class BookingsPageComponent implements OnInit {
       });
   }
 
-  onDeleteBooking(booking: Booking): void {
-    if (this.deletingBookingId() !== null) {
-      return;
-    }
-
-    const confirmed = globalThis.confirm(
-      `Delete the booking "${booking.text}" from ${booking.bookingDate}?`,
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    this.deletingBookingId.set(booking.id);
-    this.errorMessage.set('');
-    this.successMessage.set('');
+  private updateBooking(id: string, payload: CreateBookingRequest): void {
+    this.saving.set(true);
+    this.clearMessages();
 
     this.bookingsService
-      .deleteBooking(booking.id)
+      .updateBooking(id, payload)
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         finalize(() => {
-          this.deletingBookingId.set(null);
+          this.saving.set(false);
         }),
       )
       .subscribe({
         next: () => {
-          this.successMessage.set('Booking deleted successfully.');
+          this.editingBooking.set(null);
+          this.successMessage.set('Booking updated successfully.');
           this.loadBookings({ showLoadingIndicator: false });
         },
         error: (error: HttpErrorResponse) => {
           this.errorMessage.set(
-            this.extractErrorMessage(error, 'Unable to delete booking.'),
+            this.extractErrorMessage(error, 'Unable to update booking.'),
           );
         },
       });
@@ -126,6 +192,11 @@ export class BookingsPageComponent implements OnInit {
           );
         },
       });
+  }
+
+  private clearMessages(): void {
+    this.errorMessage.set('');
+    this.successMessage.set('');
   }
 
   private extractErrorMessage(

@@ -12,12 +12,20 @@
   <main class="content-grid">
     <section class="panel">
       <div class="panel-header">
-        <h2>New booking</h2>
-        <p>Create an income or expense entry. Date, amount, and text are required.</p>
+        <h2>{{ editingBooking() ? 'Edit booking' : 'New booking' }}</h2>
+        <p *ngIf="!editingBooking()">
+          Create an income or expense entry. Date, amount, and text are required.
+        </p>
+        <p *ngIf="editingBooking()">
+          Update the selected booking’s date, type, amount, or text, then save your changes.
+        </p>
       </div>
       <app-booking-form
+        [mode]="editingBooking() ? 'edit' : 'create'"
+        [booking]="editingBooking()"
         [saving]="saving()"
-        (bookingCreated)="onCreateBooking($event)"
+        (bookingSubmitted)="onBookingSubmitted($event)"
+        (editCancelled)="onCancelEditing()"
       ></app-booking-form>
     </section>
 
@@ -34,6 +42,9 @@
         [bookings]="bookings()"
         [loading]="loading()"
         [deletingBookingId]="deletingBookingId()"
+        [editingBookingId]="editingBookingId()"
+        [actionsDisabled]="actionsDisabled()"
+        (editBookingRequested)="onStartEditing($event)"
         (deleteBookingRequested)="onDeleteBooking($event)"
       ></app-bookings-table>
     </section>

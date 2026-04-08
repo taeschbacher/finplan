@@ -18,14 +18,24 @@
         <td class="text-cell">
           <div class="text-cell-content">
             <span class="booking-text">{{ booking.text }}</span>
-            <button
-              type="button"
-              class="delete-button"
-              [disabled]="deletingBookingId !== null"
-              (click)="requestDelete(booking)"
-            >
-              {{ deletingBookingId === booking.id ? 'Deleting...' : 'Delete' }}
-            </button>
+            <div class="action-group">
+              <button
+                type="button"
+                class="action-button edit-button"
+                [disabled]="actionsDisabled || editingBookingId === booking.id"
+                (click)="requestEdit(booking)"
+              >
+                {{ editingBookingId === booking.id ? 'Editing' : 'Edit' }}
+              </button>
+              <button
+                type="button"
+                class="action-button delete-button"
+                [disabled]="actionsDisabled"
+                (click)="requestDelete(booking)"
+              >
+                {{ deletingBookingId === booking.id ? 'Deleting...' : 'Delete' }}
+              </button>
+            </div>
           </div>
         </td>
       </tr>

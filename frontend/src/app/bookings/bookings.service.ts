@@ -1,7 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Booking, CreateBookingRequest } from './booking.model';
+import {
+  Booking,
+  CreateBookingRequest,
+  UpdateBookingRequest,
+} from './booking.model';
 
 @Injectable({ providedIn: 'root' })
 export class BookingsService {
@@ -14,6 +18,10 @@ export class BookingsService {
 
   createBooking(payload: CreateBookingRequest): Observable<Booking> {
     return this.http.post<Booking>(this.baseUrl, payload);
+  }
+
+  updateBooking(id: string, payload: UpdateBookingRequest): Observable<Booking> {
+    return this.http.patch<Booking>(`${this.baseUrl}/${id}`, payload);
   }
 
   deleteBooking(id: string): Observable<void> {

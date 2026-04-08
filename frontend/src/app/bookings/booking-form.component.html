@@ -40,7 +40,19 @@
     </small>
   </label>
 
-  <button type="submit" [disabled]="saving">
-    {{ saving ? 'Saving...' : 'Add booking' }}
-  </button>
+  <div class="actions">
+    <button type="submit" [disabled]="saving">
+      {{ submitLabel }}
+    </button>
+
+    <button
+      *ngIf="mode === 'edit'"
+      type="button"
+      class="secondary-button"
+      [disabled]="saving"
+      (click)="cancelEdit()"
+    >
+      Cancel
+    </button>
+  </div>
 </form>
