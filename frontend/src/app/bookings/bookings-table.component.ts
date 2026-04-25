@@ -15,6 +15,8 @@ export class BookingsTableComponent {
   @Input() deletingBookingId: string | null = null;
   @Input() editingBookingId: string | null = null;
   @Input() actionsDisabled = false;
+  @Input() emptyStateMessage =
+    'No bookings yet. Add your first booking using the form.';
   @Output() editBookingRequested = new EventEmitter<Booking>();
   @Output() deleteBookingRequested = new EventEmitter<Booking>();
 

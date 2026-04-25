@@ -53,6 +53,10 @@ h1 {
   margin-bottom: 1rem;
 }
 
+.overview-header {
+  margin-bottom: 0.75rem;
+}
+
 .panel-header h2 {
   margin: 0;
   font-size: 1.25rem;
@@ -61,6 +65,48 @@ h1 {
 .panel-header p {
   margin: 0.35rem 0 0;
   color: #5e6b85;
+}
+
+.year-filter-card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: end;
+  justify-content: space-between;
+  margin: 0 0 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #dbe2f0;
+  border-radius: 14px;
+  background: #f8faff;
+}
+
+.year-filter-card p {
+  flex: 1 1 280px;
+  margin: 0;
+  color: #5e6b85;
+  font-size: 0.95rem;
+}
+
+.year-filter-control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 140px;
+}
+
+.year-filter-control label {
+  font-weight: 700;
+  color: #344054;
+}
+
+.year-filter-control select {
+  min-height: 2.5rem;
+  border: 1px solid #c8d1e3;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #101828;
+  font: inherit;
+  padding: 0.45rem 0.75rem;
 }
 
 .message {

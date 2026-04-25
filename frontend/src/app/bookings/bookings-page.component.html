@@ -17,7 +17,7 @@
           Create an income or expense entry. Date, amount, and text are required.
         </p>
         <p *ngIf="editingBooking()">
-          Update the selected booking’s date, type, amount, or text, then save your changes.
+          Update the selected booking's date, type, amount, or text, then save your changes.
         </p>
       </div>
       <app-booking-form
@@ -30,17 +30,34 @@
     </section>
 
     <section class="panel">
-      <div class="panel-header">
-        <h2>Bookings overview</h2>
-        <p>The running cash balance is calculated automatically in chronological order.</p>
+      <div class="panel-header overview-header">
+        <div>
+          <h2>Bookings overview</h2>
+          <p>The running cash balance is calculated automatically in chronological order.</p>
+        </div>
+      </div>
+
+      <div class="year-filter-card" *ngIf="bookings().length > 0">
+        <div class="year-filter-control">
+          <label for="year-filter">Year</label>
+          <select
+            id="year-filter"
+            [value]="selectedYear()"
+            (change)="onYearSelected($event)"
+          >
+            <option *ngFor="let year of yearOptions()" [value]="year">{{ year }}</option>
+          </select>
+        </div>
+        <p>{{ filterSummary() }}</p>
       </div>
 
       <p *ngIf="successMessage()" class="message message-success">{{ successMessage() }}</p>
       <p *ngIf="errorMessage()" class="message message-error">{{ errorMessage() }}</p>
 
       <app-bookings-table
-        [bookings]="bookings()"
+        [bookings]="filteredBookings()"
         [loading]="loading()"
+        [emptyStateMessage]="tableEmptyMessage()"
         [deletingBookingId]="deletingBookingId()"
         [editingBookingId]="editingBookingId()"
         [actionsDisabled]="actionsDisabled()"

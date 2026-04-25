@@ -28,8 +28,10 @@ export class BookingsPageComponent implements OnInit {
 
   private readonly destroyRef = inject(DestroyRef);
   private readonly bookingsService = inject(BookingsService);
+  private readonly currentYearValue = new Date().getFullYear();
 
   readonly bookings = signal<Booking[]>([]);
+  readonly selectedYear = signal(this.currentYearValue);
   readonly loading = signal(true);
   readonly saving = signal(false);
   readonly deletingBookingId = signal<string | null>(null);
@@ -40,6 +42,54 @@ export class BookingsPageComponent implements OnInit {
   );
   readonly errorMessage = signal('');
   readonly successMessage = signal('');
+
+  readonly availableYears = computed(() => {
+    const years = new Set<number>();
+
+    for (const booking of this.bookings()) {
+      const year = this.getYearFromDateString(booking.bookingDate);
+
+      if (year !== null) {
+        years.add(year);
+      }
+    }
+
+    return [...years].sort((left, right) => right - left);
+  });
+
+  readonly yearOptions = computed(() => {
+    const years = new Set<number>([
+      this.currentYearValue,
+      this.selectedYear(),
+      ...this.availableYears(),
+    ]);
+
+    return [...years].sort((left, right) => right - left);
+  });
+
+  readonly filteredBookings = computed(() => {
+    const selectedYear = this.selectedYear();
+
+    return this.bookings().filter(
+      (booking) => this.getYearFromDateString(booking.bookingDate) === selectedYear,
+    );
+  });
+
+  readonly filterSummary = computed(() => {
+    const totalCount = this.bookings().length;
+    const visibleCount = this.filteredBookings().length;
+    const bookingLabel = totalCount === 1 ? 'booking' : 'bookings';
+
+    return `Showing ${visibleCount} of ${totalCount} ${bookingLabel} for ${this.selectedYear()}. Cash balances remain all-time balances.`;
+  });
+
+  readonly tableEmptyMessage = computed(() => {
+    if (this.bookings().length === 0) {
+      return 'No bookings yet. Add your first booking using the form.';
+    }
+
+    return `No bookings found for ${this.selectedYear()}. Choose another available year or add a booking for this year.`;
+  });
 
   ngOnInit(): void {
     this.loadBookings();
@@ -62,11 +112,24 @@ export class BookingsPageComponent implements OnInit {
     }
 
     this.editingBooking.set(booking);
+    this.selectedYear.set(this.getYearFromDateString(booking.bookingDate) ?? this.selectedYear());
     this.clearMessages();
   }
 
   onCancelEditing(): void {
     this.editingBooking.set(null);
+    this.clearMessages();
+  }
+
+  onYearSelected(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    const selectedYear = Number(value);
+
+    if (!Number.isInteger(selectedYear)) {
+      return;
+    }
+
+    this.selectedYear.set(selectedYear);
     this.clearMessages();
   }
 
@@ -125,6 +188,7 @@ export class BookingsPageComponent implements OnInit {
       )
       .subscribe({
         next: () => {
+          this.selectYearFromPayload(payload);
           this.successMessage.set('Booking saved successfully.');
           this.bookingForm?.reset();
           this.loadBookings({ showLoadingIndicator: false });
@@ -152,6 +216,7 @@ export class BookingsPageComponent implements OnInit {
       .subscribe({
         next: () => {
           this.editingBooking.set(null);
+          this.selectYearFromPayload(payload);
           this.successMessage.set('Booking updated successfully.');
           this.loadBookings({ showLoadingIndicator: false });
         },
@@ -197,6 +262,25 @@ export class BookingsPageComponent implements OnInit {
   private clearMessages(): void {
     this.errorMessage.set('');
     this.successMessage.set('');
+  }
+
+  private selectYearFromPayload(payload: CreateBookingRequest): void {
+    const year = this.getYearFromDateString(payload.bookingDate);
+
+    if (year !== null) {
+      this.selectedYear.set(year);
+    }
+  }
+
+  private getYearFromDateString(value: string): number | null {
+    const match = /^(\d{4})-\d{2}-\d{2}$/.exec(value);
+
+    if (!match) {
+      return null;
+    }
+
+    const year = Number(match[1]);
+    return Number.isInteger(year) ? year : null;
   }
 
   private extractErrorMessage(
