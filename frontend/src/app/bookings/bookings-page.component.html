@@ -45,7 +45,13 @@
             [value]="selectedYear()"
             (change)="onYearSelected($event)"
           >
-            <option *ngFor="let year of yearOptions()" [value]="year">{{ year }}</option>
+            <option
+              *ngFor="let year of yearOptions()"
+              [value]="year"
+              [selected]="year === selectedYear()"
+            >
+              {{ year }}
+            </option>
           </select>
         </div>
         <p>{{ filterSummary() }}</p>
